@@ -1,0 +1,121 @@
+TECHNISCHE OVERDRACHT — BEELDOKE POWERPOINTMAKER v0.8.7
+
+AFBAKENING
+Deze release wijzigt uitsluitend de PowerPointmaker. Er zijn geen wijzigingen
+aan BeeldOKE of de beheerapp doorgevoerd. Benodigde platformwijzigingen moeten
+als afzonderlijke opdracht voor de BeeldOKE-tool worden uitgeschreven.
+
+HERSTELPUNT v0.8.7
+- Standaardmodus volgt de globale muzieklijst van v0.7.3.
+- De toggle heeft een volledig klikbaar inputvlak en wisselt daadwerkelijk
+  tussen de standaardlijst en de uitgebreide bediening.
+- De geïntegreerde bouw valideert token, sessieduur, role=operator en pptSources.
+- Ontbrekende rechten geven geen fallback naar both.
+- De branding gebruikt de randloze driedelige BeeldOKE-header, een klikbaar
+  Ookwood-logo, dynamische ondernemersbranding en uitsluitend
+  beeldoke-logo-1200x540.png voor het BeeldOKE-logo.
+- Het startbestand is index.html. De klantlogo's zijn uitsluitend
+  kusters-logo-1200x540.png en ruiver-logo-1200x540.png; de oude losse en
+  ingebedde klantlogo's zijn verwijderd.
+- De standaardtemplate is extern geplaatst in assets/templates en wordt met fetch
+  geladen. index.html bevat geen template-base64 meer.
+- Templateherkenning gebruikt primair BeeldOKE_Hoofdfoto en BeeldOKE_Seriefoto.
+  isPhoto="1" blijft uitsluitend als terugval voor oudere templates bestaan.
+- De standalone HTML heeft uitsluitend op file:// een expliciete lokale
+  interfacetest; de in het platform opgenomen kopie heeft deze niet.
+
+STATUS
+Dit pakket bevat de Git/Netlify-webbuild 0.8.7. index.html bevat de interface,
+JSZip, CSS en JavaScript. De standaard-PPTX en logo-assets staan los en moeten samen
+worden gepubliceerd. Voor lokaal testen is een lokale webserver nodig.
+
+BELANGRIJKSTE BESTANDEN
+- index.html: zelfstandige gebruikersinterface en startbestand voor Netlify.
+- favicon-512x512.png: favicon van het fotoplatform.
+- beeldoke-logo-1200x540.png: actuele groen-zwarte BeeldOKE-branding.
+- kusters-logo-1200x540.png en ruiver-logo-1200x540.png: actuele klantlogo's.
+- assets/templates/uitvaartpresentatie-basis-v3-21082026.pptx: losse standaardtemplate.
+- MASTERPROMPT-v0.8.7.txt: overdrachtsprompt voor een volgende AI-/Codex-sessie.
+
+TECHNISCHE OPBOUW
+Een PPTX is een ZIP met OOXML-bestanden. app.js opent de template met JSZip, leest de
+presentatievolgorde en relationships, herkent stopdia's en fotodia's, kopieert volledige
+dia-XML plus relationships en wijzigt uitsluitend de bedoelde mediarelaties.
+
+De bronbestanden worden eerst omgezet naar sourceGroups. Iedere groep bevat de foto's
+van precies één ZIP of .beeldoke-project. buildGroupedDeck maakt vervolgens:
+hoofdfotodia + fotodia's van groep 1 + hoofdfotodia + fotodia's van groep 2 + ... +
+afsluitende hoofdfotodia.
+
+Reeksfoto's worden primair herkend via de objectnaam BeeldOKE_Seriefoto. Oudere
+templates kunnen terugvallen op p:nvPr isPhoto="1"; BeeldOKE_Hoofdfoto wordt daarbij
+altijd uitgesloten. Zo wordt het audiopictogram niet als foto vervangen. De foto-bytes
+worden niet gewijzigd. Alleen de weergavegeometrie wordt passend gemaakt zonder crop.
+
+Per reeks worden nul, één of meerdere gebruikersnummers gekoppeld. Ieder nummer kan aan
+begin en einde worden ingekort en krijgt optioneel een fade-in of fade-out. De browser
+decodeert de fragmenten lokaal, zet ze in de gekozen volgorde achter elkaar en schrijft
+één PCM-WAV voor de PowerPoint. Bij muziektiming wordt de gezamenlijke duur verdeeld over
+de foto's. Bij vaste fototijd wordt het audioblok op de berekende reeksduur geknipt of met
+stilte aangevuld. Alle templatemuziek wordt verwijderd.
+
+.beeldoke-import herkent aan de PK-header of het om het v4.5.16 ZIP-containerformaat
+gaat. In dat geval worden project.json en de foto's via hun photos/...-paden gelezen.
+Oudere projecten met rechtstreekse JSON en sourceData blijven ondersteund.
+
+De hoofdfoto wordt eerst in een lokaal canvas getekend en opnieuw opgeslagen. Hierdoor
+wordt EXIF-camerarotatie vast ingebakken en gebruikt PowerPoint dezelfde breedte,
+hoogte en stand als de browserpreview.
+
+HOOFDFOTODIA EN OVERGANG
+De stopdia in de template heeft lokaal geen overgang, maar de gebruikte slide layout
+erft een automatische overgang van 4000 ms. Daarom voegt forceManualAdvance op iedere
+gegenereerde hoofdfotodia expliciet een lokale p:transition advClick="1" zonder advTm
+toe. Zonder deze correctie gaat de hoofdfoto alsnog automatisch verder.
+
+BEKENDE TEMPLATEVOORWAARDEN
+- Nieuwe fotodia's bevatten BeeldOKE_Seriefoto; oudere templates mogen isPhoto="1" gebruiken.
+- Hoofdfotodia's bevatten BeeldOKE_Hoofdfoto en worden altijd handmatig gezet.
+- De eerste fotodia bevat het audio-object BeeldOKE_Muziekstart met een /media-relatie.
+- De eerste fotodia van een muziekblok moet een relationship van type /media bevatten.
+- Stopdia's moeten herkenbaar zijn als niet-automatische dia's zonder reeksfoto.
+- Een wezenlijk anders opgebouwde template kan aanvullende detectielogica vereisen.
+
+TESTSTATUS v0.8.7
+- JavaScript-syntaxcontrole geslaagd.
+- Structurele test met twee bronbestanden van 3 en 6 foto's geslaagd.
+- Verwachte uitvoer: 9 fotodia's en 3 hoofdfotodia's, totaal 12 dia's.
+- Eén gekoppeld muziekbestand wordt gebruikt in reeks 1; reeks 2 is volledig stil.
+- Audiotrim is in alle gegenereerde fotodia's verwijderd.
+- Testduur 153 seconden over 3 foto's geeft 51.000 ms per foto.
+- Testduur 210 seconden over 6 foto's geeft 35.000 ms per foto.
+- De oude hulplabels “eerste foto” en “laatste foto” ontbreken in gegenereerde dia's.
+- De eerste dia van een stille reeks bevat geen audio-, media- of timingelementen.
+- Standalone pakket is met unzip -t gecontroleerd.
+
+PRIVACY
+De tool verwerkt alles lokaal. De meegeleverde persoonlijke voorbeeldhoofdfoto is
+bewust niet opgenomen in dit overdrachtspakket en is niet ingebouwd in de tool.
+WIJZIGINGEN IN v0.7.3
+- De bronlijst analyseert ZIP- en .beeldoke-bestanden lokaal en toont het fotoaantal.
+- Iedere regel in het eindoverzicht bevat het fotoaantal van die fotoreeks.
+- De gebruiker kan in een inklapbaar onderdeel een eigen PowerPointnaam opgeven.
+- Zonder eigen naam wordt “Uitvaartpresentatie [volgnummer] [ddmmjjjj].pptx” gebruikt.
+- Het volgende volgnummer wordt in localStorage bewaard na een geslaagde generatie.
+
+WIJZIGINGEN IN v0.8.7
+- Ondersteuning voor .beeldoke-containerformaat v4.5.16 én oudere JSON-projecten.
+- Vrije koppeling van meerdere muzieknummers aan iedere fotoreeks.
+- Handmatig begin- en eindpunt en optionele fade-in/fade-out per nummer.
+- Keuze tussen muziekgestuurde timing en vaste seconden per foto per reeks.
+- Geen muziek uit de PowerPoint-template; uitsluitend expliciet gekoppelde muziek.
+- Beheerkeuze: alleen BeeldOKE-projecten of BeeldOKE-projecten plus ZIP-bestanden.
+
+CORRECTIES IN v0.8.7
+- De beheerkeuze is uit de ondernemersinterface verwijderd.
+- Muziek wordt rechtstreeks binnen een fotoreeks toegevoegd en daar geordend.
+- Eigen audiospeler met blijvend zichtbare positie en tijdweergave op 0,1 seconde.
+- Begin/einde kunnen met plus/min 0,1 seconde of de huidige pauzepositie worden gezet.
+- Fade-in en fade-out zijn afzonderlijk 0–10 seconden instelbaar en hoorbaar in preview.
+- Dezelfde audiobron kan zo nodig meermaals en in verschillende reeksen worden gebruikt.
+- Muziekpanelen zijn begrensd en herschikken op smalle schermen zonder uitloop.

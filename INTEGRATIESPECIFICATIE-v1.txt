@@ -1,0 +1,538 @@
+INTEGRATIESPECIFICATIE — BEELDOKE PLATFORM ↔ POWERPOINTMAKER
+Versie specificatie: v1
+Referentiebasis:
+- BeeldOKE platform: v4.5.17 kandidaat
+- BeeldOKE gouden herstelpunt: v4.5.16
+- PowerPointmaker: v0.8.7
+Datum: 21 augustus 2026
+
+======================================================================
+1. DOEL VAN DE KOPPELING
+======================================================================
+
+BeeldOKE en PowerPointmaker blijven twee afzonderlijke functionele onderdelen:
+
+A. BEELDOKE PLATFORM
+Voor voorbereiding van foto's:
+- importeren;
+- kwaliteitscontrole;
+- uitsnijden;
+- verbeteren;
+- roteren;
+- zwart-wit;
+- ordenen;
+- collage;
+- project opslaan;
+- presentatieklare bron exporteren.
+
+B. POWERPOINTMAKER
+Voor de uitvaartondernemer:
+- één of meer BeeldOKE-projecten en/of ZIP-bronnen gebruiken;
+- fotoreeksen maken;
+- hoofdfoto toevoegen;
+- muziek koppelen;
+- timing bepalen;
+- PowerPoint genereren.
+
+De integratie moet voorkomen dat beide tools elkaars kernlogica dupliceren.
+
+======================================================================
+2. ROLVERDELING
+======================================================================
+
+family
+- gebruikt BeeldOKE voor fotovoorbereiding;
+- mag de PowerPointmaker NIET openen of gebruiken.
+
+operator
+- gebruikt BeeldOKE;
+- ziet de knop "PowerPoint maken";
+- mag via een geldige BeeldOKE-sessie naar de PowerPointmaker;
+- krijgt uitsluitend de door beheer toegestane bronsoorten.
+
+De PowerPointmaker mag niet zelfstandig besluiten dat een gebruiker operator is.
+
+======================================================================
+3. TOEGANGSCONTROLE POWERPOINTMAKER
+======================================================================
+
+Dit is een VERPLICHT integratiepunt.
+
+De PowerPointmaker mag alleen openen als:
+- er een geldige BeeldOKE-sessie bestaat;
+- de sessie nog geldig is;
+- role === "operator".
+
+Een rechtstreekse URL naar powerpointmaker.html mag dus niet voldoende zijn.
+
+Bij ontbreken/verlopen van sessie:
+- geen maker tonen;
+- terug naar BeeldOKE-login of duidelijke melding;
+- geen fallback naar brede toegangsrechten.
+
+Huidige aandacht in BeeldOKE v4.5.17:
+De koppeling via de operator-knop is aanwezig, maar de PowerPointmaker moet zelf
+ook expliciet sessie/rol valideren.
+
+Aanbevolen:
+- sessietoken via bestaande BeeldOKE-session/localStorage/sessionStorage gebruiken;
+- validatie via bestaande Netlify validate-code functie/tokenroute;
+- uitsluitend na geldige validatie maker initialiseren.
+
+======================================================================
+4. PPTSOURCES — TOEGESTANE BRONSOORTEN
+======================================================================
+
+BeeldOKE v4.5.17 introduceert pptSources.
+
+Geldige waarden:
+
+pptSources = "project"
+- alleen .beeldoke-projecten toestaan.
+
+pptSources = "both"
+- .beeldoke-projecten én gewone ZIP-bronnen toestaan.
+
+Gedrag:
+- instelling wordt door beheer / licentiecode bepaald;
+- operator kan dit NIET zelf wijzigen in PowerPointmaker;
+- PowerPointmaker leest deze instelling uit de geldige BeeldOKE-sessie.
+
+Nieuwe codes:
+- gewenste standaard: "project".
+
+Bestaande codes:
+- compatibiliteitsfallback kan "both" zijn.
+
+BELANGRIJK:
+Als sessie of pptSources ontbreekt, mag PowerPointmaker niet automatisch "both"
+kiezen wanneer daardoor toegang wordt verruimd.
+Veilige fallback = geen toegang totdat sessie opnieuw gevalideerd is.
+
+======================================================================
+5. GEGEVENS DIE BEELDOKE AAN SESSIE MAG DOORGEVEN
+======================================================================
+
+Minimaal:
+- role
+- operator / organisatienaam
+- licenseExpires / expires
+- sessionUntil
+- brand
+- pptSources
+
+BeeldOKE validate-code v4.5.17 ondersteunt pptSources in de sessierespons.
+
+PowerPointmaker mag deze gegevens gebruiken voor:
+- toegang;
+- toegestane bronsoorten;
+- branding;
+- eventueel later operator-dashboard/licentie-informatie.
+
+Geen foto- of projectinhoud via server doorgeven.
+
+======================================================================
+6. PRIVACY
+======================================================================
+
+Hoofdregel:
+Alle foto-, project-, muziek- en PowerPointverwerking blijft lokaal in de browser.
+
+Server:
+- controleert toegang;
+- ontvangt geen foto's;
+- ontvangt geen BeeldOKE-projectinhoud;
+- ontvangt geen muziek;
+- ontvangt geen gegenereerde PowerPoint.
+
+PowerPointmaker 0.8.7 verwerkt ZIP, .beeldoke, muziek en PPTX lokaal.
+
+======================================================================
+7. .BEELDOKE ALS PRIMAIRE OVERDRACHT
+======================================================================
+
+De voorkeursbron voor geïntegreerd gebruik is:
+.beeldoke
+
+PowerPointmaker v0.8.7 ondersteunt:
+- nieuw BeeldOKE containerformaat vanaf v4.5.16;
+- ouder JSON/sourceData-formaat voor backwards compatibility.
+
+Voor nieuw geïntegreerd gebruik moet het v4.5.16+ containerformaat leidend zijn.
+
+PowerPointmaker moet uit .beeldoke lezen:
+- opgeslagen sequence/volgorde;
+- gewone foto's;
+- collages;
+- relevante foto-transformaties zoals in huidige 0.8.7-implementatie;
+- projectbeeld-aantal.
+
+De PowerPointmaker mag het BeeldOKE-project NIET wijzigen.
+
+======================================================================
+8. ZIP ALS OPTIONELE BRON
+======================================================================
+
+Alleen toegestaan wanneer:
+pptSources === "both"
+
+ZIP-regels uit PowerPointmaker 0.8.7:
+- één ZIP = één fotoreeks;
+- JPG en PNG worden lokaal gelezen;
+- foto's worden natuurlijk/numeriek gesorteerd;
+- bronbestanden worden niet geüpload.
+
+Als pptSources === "project":
+- ZIP-drop/selectie moet niet alleen verborgen maar ook technisch geweigerd worden.
+
+======================================================================
+9. BRONGROEPEN / FOTOREEKSEN
+======================================================================
+
+PowerPointmaker:
+- één .beeldoke of ZIP = één sourceGroup / fotoreeks;
+- volgorde van bronbestanden = volgorde van fotoreeksen;
+- bronnen zijn versleepbaar;
+- omhoog/omlaag blijft mogelijk.
+
+Per reeks:
+- exact evenveel fotodia's als bronbeelden;
+- collage telt als één projectbeeld;
+- bronanalyse toont aantal foto's/projectbeelden;
+- eindoverzicht toont hetzelfde aantal.
+
+======================================================================
+10. HOOFDFOTO
+======================================================================
+
+PowerPointmaker v0.8.7:
+- gebruiker kiest één hoofdfoto;
+- hoofdfoto verschijnt:
+  - vóór eerste reeks;
+  - tussen iedere twee reeksen;
+  - na laatste reeks.
+
+Hoofdfotodia:
+- echte stopdia;
+- alleen doorgaan na klik;
+- geen advTm;
+- advClick = 1;
+- eventuele automatische overgang uit layout/template expliciet overschrijven.
+
+Hoofdfoto wordt lokaal via canvas genormaliseerd zodat EXIF-oriëntatie correct is.
+
+======================================================================
+11. FOTOPLAATSING IN POWERPOINT
+======================================================================
+
+Uit PowerPointmaker v0.8.7:
+
+ZIP-foto's:
+- bytes zo veel mogelijk ongewijzigd in PPTX opnemen;
+- proportioneel plaatsen;
+- geen vervorming;
+- geen onbedoelde crop.
+
+.beeldoke-projecten:
+- gespeelde zoom/positie/collageberekening uit BeeldOKE respecteren zoals reeds
+  in 0.8.7 geïmplementeerd.
+
+Belangrijk:
+De PowerPointmaker moet geen tweede, afwijkende foto-editor worden.
+
+======================================================================
+12. TEMPLATELOGICA
+======================================================================
+
+PowerPointmaker werkt op bestaande PowerPoint-template.
+
+Standaard:
+assets/templates/uitvaartpresentatie-basis-v3-21082026.pptx
+afkomstig van:
+"Uitvaartpresentatie template BASIS V3- 21082026.pptx"
+
+Fotodia's:
+- volledige template-dia kopiëren;
+- timing, overgang, animaties, hyperlinks, layouts en relaties behouden;
+- alleen bedoelde foto-/mediarelaties wijzigen.
+
+Reeksfoto-herkenning:
+BeeldOKE_Seriefoto (primair) of p:nvPr isPhoto="1" (terugval voor oudere templates)
+
+Audiopictogram:
+- niet behandelen als reeksfoto.
+
+Bij meer foto's/reeksen dan voorbeeldslides:
+- volledige brondia's cyclisch kopiëren.
+
+======================================================================
+13. MUZIEK
+======================================================================
+
+Huidige leidende regel uit PowerPointmaker 0.8.7:
+
+ALLEEN door gebruiker expliciet gekoppelde muziek wordt gebruikt.
+Templatemuziek wordt altijd verwijderd als deze niet expliciet wordt vervangen.
+
+Per reeks:
+- stil;
+- één nummer;
+- meerdere nummers mogelijk.
+
+Ondersteunde bronformaten:
+- MP3
+- M4A
+- WAV
+
+Uitgebreid:
+- trim begin/einde;
+- fade-in;
+- fade-out;
+- meerdere nummers per reeks.
+
+Verouderde instructie die NIET meer leidend mag zijn:
+"templatemuziek automatisch behouden als geen muziek gekozen is."
+
+De actuele 0.8.7-regel is:
+zonder geüploade/gekoppelde muziek = geen templatemuziek gebruiken.
+
+======================================================================
+14. TIMING
+======================================================================
+
+Bij muziek:
+- gezamenlijke duur van gekoppelde muziek per reeks bepalen;
+- delen door aantal foto's;
+- advTm per foto schrijven;
+- afrondingsverschillen verdelen;
+- som van advTm exact gelijk aan muziekduur.
+
+Bij vaste tijd per foto:
+- gekozen fototijd is leidend;
+- muziekblok knippen of met stilte aanvullen tot reeksduur.
+
+Stille reeks:
+- vaste gekozen tijd;
+- of standaard 4 seconden.
+
+======================================================================
+15. POWERPOINTBESTANDSNAAM
+======================================================================
+
+Optioneel eigen naam.
+
+Zonder eigen naam:
+Uitvaartpresentatie [volgnummer] [ddmmjjjj].pptx
+
+Volgnummer:
+- lokaal bewaren;
+- alleen verhogen na geslaagde generatie met standaardnaam.
+
+======================================================================
+16. BRANDING
+======================================================================
+
+BeeldOKE sessie bevat brand.
+
+PowerPointmaker mag branding uit BeeldOKE overnemen.
+
+Huidige BeeldOKE-brandwaarden:
+- kusters
+- ruiver
+- none
+
+Architectuurdoel:
+- één consistente bron voor logo/branding;
+- geen onnodige dubbele embedded assets als geïntegreerde webversie gebruikt wordt.
+
+De standalone PowerPoint testversie mag voor testdoeleinden assets ingebed houden.
+
+======================================================================
+17. NAVIGATIE VAN BEELDOKE NAAR POWERPOINTMAKER
+======================================================================
+
+Alleen voor role=operator.
+
+Knop:
+"PowerPoint maken"
+
+Bij klikken:
+1. actieve sessie controleren;
+2. session/token beschikbaar houden;
+3. naar powerpointmaker.html;
+4. PowerPointmaker valideert opnieuw role=operator;
+5. PowerPointmaker leest pptSources;
+6. juiste bronopties tonen.
+
+Geen family-toegang.
+
+======================================================================
+18. NAVIGATIE TERUG
+======================================================================
+
+Aanbevolen:
+PowerPointmaker krijgt een duidelijke knop:
+"Terug naar BeeldOKE"
+
+Terugkeren mag:
+- BeeldOKE-sessie behouden;
+- geen PowerPointbronbestanden server-side bewaren;
+- geen BeeldOKE-project automatisch overschrijven.
+
+======================================================================
+19. WAT NIET SAMENVOEGEN
+======================================================================
+
+BeeldOKE blijft verantwoordelijk voor:
+- foto-editing;
+- kwaliteitscontrole;
+- collage;
+- volgorde;
+- projectbeheer.
+
+PowerPointmaker blijft verantwoordelijk voor:
+- fotoreeksen uit bronnen;
+- hoofdfoto;
+- muziek;
+- template;
+- diaopbouw;
+- timing;
+- PPTX.
+
+Voorkom dubbele implementatie van:
+- fotobewerking;
+- projectopslag;
+- gebruikers-/licentiebeheer.
+
+======================================================================
+20. OPEN INTEGRATIEPUNTEN
+======================================================================
+
+A. VERPLICHT vóór definitieve 4.5.17
+- PowerPointmaker zelf moet geldige operator-sessie controleren.
+- Geen directe anonieme toegang via powerpointmaker.html.
+- Geen permissieve fallback naar pptSources="both".
+- sw.js/cacheversie van BeeldOKE moet naar v4.5.17.
+- changelog moet correct vermelden dat basis v4.5.16 is.
+- geconsolideerde wijzigingshistorie aanvullen tot v4.5.17.
+
+B. POWERPOINT HERSTELPAKKET
+Het aangeleverde PowerPointmaker-v0.8.7.zip bevat:
+- standalone HTML;
+- README;
+- masterprompt;
+- technische overdracht.
+
+De technische overdracht verwijst echter ook naar ontwikkelbestanden zoals:
+- index.html
+- styles.css
+- app.js
+- build-standalone.mjs
+- assets/templates/uitvaartpresentatie-basis-v3-21082026.pptx
+- vendor/jszip.min.js
+- tests
+- package.json/package-lock.json
+
+Deze ontwikkelbron zit NIET in het huidige 0.8.7 overdrachtspakket.
+Voor een echt herstelpunt moet later ook de volledige ontwikkelbron worden bewaard.
+
+C. BEELDOKE OPEN PUNTEN LOS VAN INTEGRATIE
+- HEIC werkt nog niet betrouwbaar in Edge.
+- basisnaam typen veroorzaakt flikkeren; gewenste debounce ±700 ms.
+Deze mogen door PowerPoint-integratie niet worden geraakt.
+
+======================================================================
+21. COMPATIBILITEITSREGEL
+======================================================================
+
+PowerPointmaker moet minimaal blijven ondersteunen:
+- .beeldoke v4.5.16+ containerformaat;
+- oudere JSON .beeldoke-projecten zolang huidige 0.8.7 ondersteuning bestaat.
+
+Nieuwe BeeldOKE-versies mogen het containerformaat niet stilzwijgend wijzigen.
+Als project.json-schema wordt uitgebreid:
+- backwards compatible houden;
+- oude velden niet zonder migratie verwijderen;
+- PowerPointmaker tijdig bijwerken.
+
+======================================================================
+22. ACCEPTATIETEST INTEGRATIE
+======================================================================
+
+TEST 1 — FAMILY
+- login als family;
+- geen PowerPointknop;
+- rechtstreeks powerpointmaker.html openen;
+- toegang geweigerd.
+
+TEST 2 — OPERATOR / PROJECT
+- operator met pptSources="project";
+- PowerPointknop zichtbaar;
+- maker opent;
+- .beeldoke toegestaan;
+- ZIP geweigerd;
+- projectbeeld-aantal klopt;
+- presentatie genereren.
+
+TEST 3 — OPERATOR / BOTH
+- operator met pptSources="both";
+- .beeldoke toegestaan;
+- ZIP toegestaan;
+- beide als aparte reeksen;
+- volgorde aanpassen;
+- presentatie genereren.
+
+TEST 4 — VERLOPEN SESSIE
+- maker rechtstreeks/openstaand tabblad;
+- sessie laten verlopen;
+- nieuwe bronactie/generatie mag niet doorgaan zonder herauthenticatie.
+
+TEST 5 — .BEELDOKE
+- gewoon fotoproject;
+- collageproject;
+- oudere JSON-versie;
+- v4.5.16+ container;
+- juiste volgorde en aantallen.
+
+TEST 6 — MUZIEK
+- stille reeks;
+- één nummer;
+- meerdere nummers;
+- trim/fade;
+- geen templatemuziek wanneer niets gekoppeld.
+
+TEST 7 — HOOFDFOTO
+- vóór/tussen/na;
+- handmatige stop;
+- EXIF staand beeld correct.
+
+TEST 8 — PRIVACY
+- browser devtools/netwerk:
+  geen foto/project/muziek/PPTX-upload.
+
+======================================================================
+23. VERSIEBEHEER
+======================================================================
+
+BeeldOKE:
+- v4.5.16 blijft gouden herstelpunt totdat 4.5.17 volledig getest is.
+- v4.5.17 pas promoveren nadat open integratiepunten zijn opgelost.
+
+PowerPointmaker:
+- v0.8.7 blijft huidige functionele referentie.
+- toekomstige integratieversies krijgen eigen versienummer.
+
+Iedere release:
+- complete ZIP;
+- changelog;
+- masterprompt/hersteldossier;
+- integratiespecificatie bijwerken wanneer interfacecontract verandert.
+
+======================================================================
+24. KERNCONTRACT IN ÉÉN ZIN
+======================================================================
+
+BeeldOKE levert lokaal een gecontroleerd en geordend foto-project aan;
+alleen een geldig ingelogde operator mag dit project in de PowerPointmaker gebruiken,
+waar het zonder server-upload wordt omgezet in een templategestuurde PowerPoint met
+hoofdfoto, fotoreeksen, optionele muziek en correcte timing.
