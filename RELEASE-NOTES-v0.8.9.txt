@@ -1,0 +1,32 @@
+BEELDOKE POWERPOINTMAKER — DEMOVERSIE 0.8.9
+Datum: 21 augustus 2026
+
+WIJZIGINGEN
+- Rechtsboven staan drie gelijke knoppen onder elkaar:
+  Uitloggen, Naar BeeldOKE en Basic/Expert.
+- De modus start altijd in Basic.
+- Expert krijgt een groene achtergrond en schakelt bij opnieuw klikken terug
+  naar Basic.
+- De bestaande waarschuwing en het terugzetten van Expert-instellingen bij
+  teruggaan naar Basic blijven werken.
+- De oude modusschakelaar in het muziekblok is verwijderd.
+- Muziek toevoegen staat rechts in het muziekblok.
+- Het testversieblok boven de werkruimte is verwijderd.
+- Het bronvak heeft een beige uitstraling en toont zichtbaar dat er nog geen
+  bestanden of projecten zijn toegevoegd.
+- Vrij uploaden van PowerPointtemplates door ondernemers is verwijderd.
+- De gekoppelde, technisch gecontroleerde standaardtemplate blijft actief.
+- Het veld voor de presentatienaam blijft voorlopig staan. Een later blok met
+  uitvaartinformatie valt buiten deze demoversie.
+
+ONVERANDERD
+- ZIP- en .beeldoke-verwerking.
+- Basic-muziekvolgorde.
+- Expert-trim, fades, meerdere nummers en vaste fototijden.
+- Terugzetten van Expert-instellingen bij terugkeer naar Basic.
+- PowerPointgeneratie en templatefallback vanaf assets/templates of de root.
+
+INSTALLATIE OP DE BESTAANDE GITHUB/NETLIFY-TESTSITE
+Vervang uitsluitend index.html door de versie uit dit correctiepakket.
+De bestaande logo's en de bestaande PowerPointtemplate hoeven niet opnieuw te
+worden geüpload.
