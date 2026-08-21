@@ -1,0 +1,127 @@
+MASTERPROMPT — BEELDOKE POWERPOINTMAKER v0.8.5
+
+Gebruik het bijgevoegde overdrachtspakket als enige technische bron en ga verder vanaf
+de werkende versie 0.8.5. Lees vóór iedere wijziging volledig: README.txt,
+TECHNISCHE-OVERDRACHT-v0.8.5.txt, index.html, styles.css, app.js,
+build-standalone.mjs en de relevante tests. Begin niet opnieuw en bouw geen alternatieve
+tool als de bestaande code kan worden aangepast.
+
+DOEL VAN DE TOOL
+Een volledig lokale browsertool voor uitvaartpresentaties. De gebruiker voegt één of
+meer ZIP-bestanden en/of BeeldOKE-projecten toe. Elk bronbestand vormt een afzonderlijke
+fotoreeks in een bestaande PowerPoint-template. De tool genereert een PPTX zonder dat
+bestanden worden geüpload.
+
+VASTE FUNCTIONELE REGELS
+1. Eén ZIP of .beeldoke-bestand is één fotoreeks.
+2. De bronbestanden zijn versleepbaar en hebben knoppen omhoog/omlaag. Die volgorde is
+   ook de volgorde van de fotoreeksen.
+3. Binnen een ZIP worden PNG- en JPG-bestanden natuurlijk/numeriek gesorteerd.
+4. Een .beeldoke-project gebruikt de opgeslagen sequence en ondersteunt fotobeelden en
+   collages zoals reeds in app.js geïmplementeerd.
+5. De gebruiker moet één hoofdfoto kiezen. Die staat vóór de eerste fotoreeks, tussen
+   iedere twee fotoreeksen en na de laatste fotoreeks.
+6. Iedere hoofdfotodia is een echte stopdia: nooit automatisch doorgaan; alleen na een
+   klik. Let op: de template-indeling kan een automatische overgang erven. v0.8.5
+   overschrijft dit daarom lokaal met advClick=1 en zonder advTm.
+7. Iedere fotoreeks krijgt exact evenveel fotodia's als er foto's in het bijbehorende
+   ZIP- of projectbestand staan.
+8. Fotodia's worden als volledige template-dia gekopieerd. Timing, overgangen,
+   animaties, hyperlinks, audio, doorklikgedrag, layouts en overige relaties mogen niet
+   opnieuw worden opgebouwd of verloren gaan.
+9. Foto's uit ZIP/project worden byte-voor-byte ongewijzigd in de PPTX opgenomen.
+   Ze worden zonder uitsnijden en zonder vervorming proportioneel binnen het volledige
+   diascherm geplaatst. Een 16:9-beeld vult dus exact een 16:9-dia.
+10. De eerste fotodia van iedere reeks behoudt de muziekstart en alle bestaande
+    muziekinstellingen uit de template.
+11. De gebruiker kan meerdere MP3-, M4A- en WAV-bestanden toevoegen en ordenen.
+    Muziek 1 hoort bij fotoreeks 1, muziek 2 bij reeks 2, enzovoort.
+12. Geüploade muziek vervangt het bestaande mediabestand/Target. Volume,
+    doorloopinstellingen en muziekstart blijven gelijk aan de template.
+13. Ontbreekt geüploade muziek voor een reeks, dan wordt alle templatemuziek uit die
+    reeks verwijderd. De reeks blijft volledig stil en gebruikt de standaard diatijd.
+14. De tool toont een kleine lokale preview van de gekozen hoofdfoto.
+15. De knop onder de invoer heet “Maak presentatie”. De downloadknop bij Gereed heet
+    “Genereer PowerPoint”.
+16. De header behoudt de logo's en vormgeving van Ookwood, Kusters en BeeldOKE.
+17. De gebruiker kan optioneel een andere .pptx of .potx kiezen. De standaardtemplate
+    is assets/uitvaart-template.pptx, afkomstig van
+    “basispresentatie beeldoke PPT v1(1).pptx”.
+18. Audiotrim wordt altijd uit gekoppelde muziek verwijderd. Het volledige gekoppelde
+    muziekstuk speelt af.
+19. Per fotoreeks wordt de volledige muziekduur gedeeld door het aantal foto's. De
+    berekende milliseconden worden als advTm op de fotodia's gezet.
+20. Afrondingsverschillen worden over de dia's verdeeld zodat de som van alle advTm-
+    waarden exact gelijk is aan de muziekduur.
+21. Zonder geüploade muziek wordt geen muziek toegevoegd of overgenomen.
+22. De verouderde hulplabels “eerste foto” en “laatste foto” uit de testtemplate worden
+    op fotodia's exact herkend en uit de gegenereerde presentatie verwijderd.
+23. De hoofdfoto wordt via canvas opnieuw vastgelegd, zodat EXIF-oriëntatie wordt
+    ingebakken en PowerPoint de foto niet kan draaien of uitrekken.
+24. De bronlijst toont na lokale analyse het aantal foto's/projectbeelden per ZIP of
+    .beeldoke-project. Het eindoverzicht toont hetzelfde aantal per fotoreeks.
+25. De gebruiker kan optioneel een eigen PowerPointnaam invullen. Zonder invoer is de
+    naam “Uitvaartpresentatie [volgnummer] [ddmmjjjj].pptx”. Het volgnummer wordt lokaal
+    bewaard en loopt alleen op na een geslaagde generatie met de standaardnaam.
+
+TEMPLATEHERKENNING IN v0.8.5
+- Een hoofdfoto-/stopdia is een dia zonder automatisch overgangselement en zonder
+  p:pic waarvan p:nvPr isPhoto="1" is.
+- Automatische fotodia's bevatten een p:pic met p:nvPr isPhoto="1".
+- De muziek staat op de eerste fotodia van een reeks en gebruikt een relationship van
+  het type /media. Het audiopictogram is geen reeksfoto en mag niet worden vervangen.
+- De template bestaat uit herhaalbare blokken: stopdia, fotodia's, stopdia, enzovoort.
+- Als er meer reeksen of foto's zijn dan voorbeelden in de template, worden volledige
+  bron-dia's cyclisch gekopieerd. Alleen afbeeldings- en eventueel muziek-Targets worden
+  gewijzigd.
+
+NIET DOEN
+- Niet alle dia's vervangen door kopieën van één basisslide.
+- Niet alle dia's zonder foto verwijderen.
+- Niet het audiopictogram als gewone foto behandelen.
+- Geen foto's croppen, uitrekken, comprimeren of opnieuw coderen.
+- Geen overgangen, timing, muziekrelaties of animaties reconstrueren als ze gekopieerd
+  kunnen worden.
+- De persoonlijke testfoto “Bas Smeets business.png” niet inbouwen of verspreiden.
+- Geen bestanden naar een server uploaden; alles moet in de browser lokaal blijven.
+
+VERSIENUMMERING
+Gebruik vanaf nu semantische testversies met een voorloopnul. De huidige versie is
+0.8.5. Kleine reparatie: 0.7.4. Een volgende grotere uitbreiding: 0.8.5.
+Gebruik nooit meer losse nummers zoals versie 7 of versie 8.
+
+BOUWEN EN TESTEN
+1. Installeer afhankelijkheden met npm install wanneer node_modules ontbreekt.
+2. Controleer JavaScript met: node --check app.js
+3. Voer minimaal uit: node test-v6.mjs
+4. Bouw de zelfstandige HTML met: node build-standalone.mjs
+5. Verpak de zelfstandige HTML en README.txt in een ZIP.
+6. Controleer de ZIP met unzip -t.
+7. Test handmatig met meerdere bronbestanden, verschillende aantallen foto's, een
+   hoofdfoto en situaties met gedeeltelijk of helemaal geen nieuwe muziek.
+
+WERKWIJZE VOOR EEN VOLGENDE WIJZIGING
+- Vat eerst samen wat je aantoonbaar uit de bestaande code en template hebt gelezen.
+- Leg vast welke bestaande functies geraakt worden.
+- Pas alleen de noodzakelijke onderdelen aan.
+- Bewaar de vaste regels hierboven.
+- Werk tests en documentatie bij.
+- Lever één nieuw ZIP-pakket met duidelijk versienummer en een korte lijst wijzigingen.
+
+Als een nieuwe wens strijdig of dubbelzinnig is ten opzichte van deze regels, vraag dan
+gericht om verduidelijking voordat je de presentatieopbouw of muzieklogica verandert.
+NIEUWE VASTE REGELS VANAF v0.8.5
+- Ondersteun zowel oudere JSON-.beeldoke-projecten als v4.5.16-containerprojecten
+  met PK-header, project.json en losse foto's in photos/.
+- Muziek uit de PowerPoint-template wordt nooit gebruikt en wordt altijd verwijderd.
+- Iedere fotoreeks kan nul, één of meerdere zelf gekozen nummers gebruiken.
+- Ieder nummer is aan begin en einde inkortbaar en heeft optionele fade-in en fade-out.
+- Meerdere nummers van één reeks spelen in de gekozen volgorde achter elkaar.
+- Timing is per reeks instelbaar: muziek bepaalt fototijd of vaste seconden per foto.
+- Bij vaste fototijd wordt het muziekblok aangepast aan fotoaantal maal fototijd.
+- Beheer kent alleen twee invoerstanden: alleen BeeldOKE-projecten, of BeeldOKE-
+  projecten plus ZIP-bestanden. Een stand met alleen ZIP bestaat niet.
+- Deze beheerkeuze mag nooit door de ondernemer in de PowerPointmaker worden gewijzigd;
+  hij wordt uitsluitend vanuit de aparte code-/beheertool bepaald.
+- De muziekpreview gebruikt een eigen contrastrijke speler met blijvend zichtbare
+  afspeelpositie, tiendenbediening en hoorbare fade-in/fade-out van 0–10 seconden.
