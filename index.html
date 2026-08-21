@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f1eb" />
-    <title>BeeldOKE · PowerPointmaker testversie 0.8.7</title>
+    <title>BeeldOKE · PowerPointmaker testversie 0.8.8</title>
     <style>:root {
   --ink: #302d27;
   --muted: #6d665c;
@@ -420,7 +420,7 @@ footer { color: var(--muted); }
     </header>
 
     <main class="shell">
-      <div class="test-notice"><strong>Testversie 0.8.7</strong><span>Standaard of uitgebreide muziekbediening en verbeterde BeeldOKE-projectweergave.</span></div>
+      <div class="test-notice"><strong>Testversie 0.8.8</strong><span>Standaard of uitgebreide muziekbediening en verbeterde BeeldOKE-projectweergave.</span></div>
 
       <section class="workspace" aria-labelledby="tool-title">
         <div class="workspace-head">
@@ -534,7 +534,7 @@ footer { color: var(--muted); }
         </div>
       </section>
     </main>
-    <div class="version-badge">BeeldOKE · PowerPointmaker · testversie 0.8.7</div>
+    <div class="version-badge">BeeldOKE · PowerPointmaker · testversie 0.8.8</div>
     <footer>BeeldOKE · Samen herinneringen omzetten in een persoonlijke uitvaartpresentatie</footer>
     <script>/*!
 
@@ -1146,10 +1146,7 @@ async function createPresentation() {
     setProgress(25, 'Template openen…', 'Vaste dia-opbouw inlezen');
     const templateBuffer = selectedTemplate
       ? await selectedTemplate.arrayBuffer()
-      : await fetch('assets/templates/uitvaartpresentatie-basis-v3-21082026.pptx').then((response) => {
-          if (!response.ok) throw new Error('De standaardtemplate kon niet worden geopend. Controleer of assets/templates is meegepubliceerd.');
-          return response.arrayBuffer();
-        });
+      : await loadDefaultTemplate();
     const ppt = await JSZip.loadAsync(new Uint8Array(templateBuffer));
     const audioGroups = await prepareAudioGroups(sourceGroups);
     const timingSettings = selectedSources.map((source) => sourceSettings.get(source) || { mode: 'music', fixedSeconds: 4 });
@@ -1583,6 +1580,20 @@ function distributeDuration(totalMs, count) {
   const base = Math.floor(totalMs / count);
   const remainder = totalMs - base * count;
   return Array.from({ length: count }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
+async function loadDefaultTemplate() {
+  const paths = [
+    'assets/templates/uitvaartpresentatie-basis-v3-21082026.pptx',
+    'uitvaartpresentatie-basis-v3-21082026.pptx'
+  ];
+  for (const path of paths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) return response.arrayBuffer();
+    } catch (_) {}
+  }
+  throw new Error('De standaardtemplate kon niet worden geopend. Plaats uitvaartpresentatie-basis-v3-21082026.pptx in de hoofdmap of in assets/templates.');
 }
 
 function readSlideAdvanceMs(slideDoc) {
